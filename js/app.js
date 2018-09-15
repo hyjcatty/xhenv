@@ -4345,7 +4345,7 @@ function draw_point_table(data){
 				"<td>--</td>"+
 				"<td>--</td>"+
 				"<td>--</td>"+
-				"<td>--</td>"+"<td>--</td>";
+				"<td>--</td>";
             txt = txt +"</tr>";
         }
 
