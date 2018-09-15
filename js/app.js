@@ -1493,6 +1493,13 @@ $(document).ready(function() {
     $("#DeviceCalibrationTableCommit").on('click',function(){
         setdevcali(device_selected.DevCode);
     });
+    $("#StationActiveConfirmBtn").on('click',function(){
+        var para = "false";
+        if($(this).attr("data-bool")==="激活"){
+            para = "true";
+        }
+        selectedstationactive(para);
+    });
     //alert($(window).height());
     //alert($(window).width());
     clear_window();
@@ -4460,7 +4467,7 @@ function draw_point_detail_panel(){
             projname = project_list[j].name;break;
         }
     }
-    var txt = "<p></p><p></p>"+
+    var txt = "<button class='btn btn-default' type='button' id='selectpointactivebutton' disabled = 'true'>查询中</button>"+"<p></p><p></p>"+
         "<div class='col-md-6 col-sm-6 col-xs-12 column'>"+
         "<dl >"+
         "<dt >站点编号：</dt><dd>"+point_selected.StatCode+"</dd>"+
@@ -4528,6 +4535,15 @@ function draw_point_detail_panel(){
     }
     txt = txt+ "</tbody>";
     $("#Table_point_device").append(txt);
+
+    getselectedstationactived();
+    $("#selectpointactivebutton").on('click',function(){
+        var tips = $(this).text();
+        $("#StationActiveConfirmModalContent").text("确定要"+tips+"站点："+point_selected.StatName+"?");
+        modal_middle($('#StationActiveConfirm'));
+        $("#StationActiveConfirmBtn").attr("data-bool",tips);
+        $('#StationActiveConfirm').modal('show');
+    });
 
 }
 function draw_point_picture_panel(){
@@ -9330,4 +9346,63 @@ function setdevcali(devcode){
         }
     };
     JQ_get(request_head,map,setdevcali_callback);
+}
+
+
+function getselectedstationactived(){
+
+    var map={
+        action:"GetStationActiveInfo",
+        body:{
+            StatCode:point_selected.StatCode
+        },
+        type:"query",
+        user:usr.id
+    };
+    var getselectedstationactived_callback = function(result){
+        var ret = result.status;
+        if(ret == "true"){
+            if(result.ret.actived == "true"){
+
+                $("#selectpointactivebutton").attr("disabled",false);
+                $("#selectpointactivebutton").text("取消激活");
+            }else{
+                $("#selectpointactivebutton").attr("disabled",false);
+                $("#selectpointactivebutton").text("激活");
+            }
+
+        }else {
+            show_alarm_module(true, "请重新登录！" + result.msg, null);
+        }
+    };
+    JQ_get(request_head,map,getselectedstationactived_callback);
+}
+
+function selectedstationactive(active){
+
+    var map={
+        action:"StationActive",
+        body:{
+            StatCode:point_selected.StatCode,
+            active:active
+        },
+        type:"mod",
+        user:usr.id
+    };
+    var selectedstationactive_callback = function(result){
+        var ret = result.status;
+        var tip = "激活";
+        if(active ===  "false")tip = "取消激活";
+        if(ret == "true"){
+            setTimeout(function() {
+                show_alarm_module(false, tip+"成功" , null);
+                point_intialize(0);
+            },500);
+        }else{
+            setTimeout(function() {
+                show_alarm_module(true, tip+"失败" + result.msg, null);
+            },500);
+        }
+    };
+    JQ_get(request_head,map,selectedstationactive_callback);
 }
